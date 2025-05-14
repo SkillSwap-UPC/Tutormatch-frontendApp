@@ -281,7 +281,7 @@ export const TutoringService = {
 
   createTutoring: async (tutoring: any): Promise<TutoringSession> => {
     try {
-      
+
       // Preparar el objeto con los campos en camelCase como espera el backend
       const tutoringPayload = {
         tutorId: tutoring.tutorId,
@@ -289,8 +289,8 @@ export const TutoringService = {
         title: tutoring.title || tutoring.courseName,
         description: tutoring.description,
         price: Number(tutoring.price),
-        whatTheyWillLearn: Array.isArray(tutoring.whatTheyWillLearn) ? 
-          tutoring.whatTheyWillLearn : 
+        whatTheyWillLearn: Array.isArray(tutoring.whatTheyWillLearn) ?
+          tutoring.whatTheyWillLearn :
           tutoring.whatTheyWillLearn.split('\n').map((item: string) => item.trim()).filter(Boolean),
         imageUrl: tutoring.imageUrl || "",
         availableTimes: tutoring.availableTimes.map((slot: any) => ({
@@ -299,16 +299,16 @@ export const TutoringService = {
           endTime: slot.endTime
         }))
       };
-      
+
       // Hacer la petición con formato camelCase
       const response = await axios.post(`${API_URL}/tutoring-sessions`, tutoringPayload);
-      
+
       // Procesar la respuesta
       const createdTutoring = response.data;
       return new TutoringSession(createdTutoring);
     } catch (error) {
       console.error('Error al crear tutoría:', error);
-      
+
       if (axios.isAxiosError(error) && error.response) {
         console.error('Detalles del error:', {
           status: error.response.status,
@@ -333,6 +333,9 @@ export const TutoringService = {
         ...(updates.description !== undefined && { description: updates.description }),
         ...(updates.price !== undefined && { price: Number(updates.price) }),
         ...(updates.title !== undefined && { title: updates.title }),
+        ...(updates.available_times !== undefined && { availableTimes: updates.available_times }),
+        ...(updates.availableTimes !== undefined && { availableTimes: updates.availableTimes }),
+
       };
 
 
@@ -381,20 +384,20 @@ export const TutoringService = {
 
   deleteTutoring: async (tutoringId: string): Promise<boolean> => {
     try {
-      
+
       try {
         // 1. Primero obtenemos información de la tutoría para saber qué recursos eliminar
         const tutoringResponse = await axios.get(`${API_URL}/tutoring-sessions/${tutoringId}`);
         const tutoringData = tutoringResponse.data;
-        
+
         // 2. Eliminar horarios disponibles
         try {
           const timesResponse = await axios.get(`${API_URL}/tutoring-sessions/${tutoringId}/available-times`);
           const times = timesResponse.data;
-          
+
           if (times && times.length > 0) {
             await Promise.all(
-              times.map((time: any) => 
+              times.map((time: any) =>
                 axios.delete(`${API_URL}/tutoring-sessions/available-times/${time.id}`)
               )
             );
@@ -402,15 +405,15 @@ export const TutoringService = {
         } catch (timesError) {
           console.warn('Error al eliminar horarios disponibles:', timesError);
         }
-        
+
         // 3. Eliminar reseñas
         try {
           const reviewsResponse = await axios.get(`${API_URL}/tutoring-sessions/${tutoringId}/reviews`);
           const reviews = reviewsResponse.data;
-          
+
           if (reviews && reviews.length > 0) {
             await Promise.all(
-              reviews.map((review: any) => 
+              reviews.map((review: any) =>
                 axios.delete(`${API_URL}/tutoring-sessions/reviews/${review.id}`)
               )
             );
@@ -418,15 +421,15 @@ export const TutoringService = {
         } catch (reviewsError) {
           console.warn('Error al eliminar reseñas:', reviewsError);
         }
-        
+
         // 4. Eliminar materiales
         try {
           const materialsResponse = await axios.get(`${API_URL}/tutoring-sessions/${tutoringId}/materials`);
           const materials = materialsResponse.data;
-          
+
           if (materials && materials.length > 0) {
             await Promise.all(
-              materials.map((material: any) => 
+              materials.map((material: any) =>
                 axios.delete(`${API_URL}/tutoring-sessions/materials/${material.id}`)
               )
             );
@@ -434,28 +437,28 @@ export const TutoringService = {
         } catch (materialsError) {
           console.warn('Error al eliminar materiales:', materialsError);
         }
-        
+
         // 5. Eliminar la imagen de la tutoría si existe
         try {
           if (tutoringData.imageUrl) {
             const imageUrlParts = tutoringData.imageUrl.split('/');
             const fileName = imageUrlParts[imageUrlParts.length - 1];
             const userId = tutoringData.tutorId;
-            
+
             await TutoringImageService.deleteTutoringImage(userId, fileName);
           }
         } catch (imageError) {
           console.warn('Error al eliminar imagen:', imageError);
         }
-        
+
       } catch (relatedError) {
         console.warn('Error al eliminar elementos relacionados:', relatedError);
         // Continuamos con la eliminación de la tutoría aunque falle la eliminación de elementos relacionados
       }
-      
+
       // 6. Finalmente, eliminar la tutoría principal
       await axios.delete(`${API_URL}/tutoring-sessions/${tutoringId}`);
-      
+
       return true;
     } catch (error) {
       console.error('Error al eliminar tutoría:', error);
