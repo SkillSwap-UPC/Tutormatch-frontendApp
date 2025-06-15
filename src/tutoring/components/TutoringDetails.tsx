@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TutoringSession, TutoringReview } from '../types/Tutoring';
-import { Check, Users, Monitor, Edit } from 'lucide-react';
+import { Check, Users, Monitor, Edit, Star } from 'lucide-react';
 import { Rating } from 'primereact/rating';
 import ReviewList from './Review/ReviewList';
+import CreateReviewModal from './Review/CreateReviewModal';
 import { User } from '../../user/types/User';
 import { Course } from '../../course/types/Course';
 import { Link } from 'react-router-dom';
 import Avatar from '../../user/components/Avatar';
 import ContactTutorModal from './ContactTutorModal';
+import { UserService } from '../../user/services/UserService';
 
 //
 import DeleteTutoringModal from '../../dashboard/components/DeleteTutoringModal';
@@ -38,18 +40,16 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
     const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
     const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
     const [contactModalVisible, setContactModalVisible] = useState<boolean>(false);
+    const [reviewModalVisible, setReviewModalVisible] = useState<boolean>(false);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
 
     useEffect(() => {
         const checkOwnership = () => {
             try {
-                // Obtener el ID del usuario actual del localStorage
                 const currentUserId = localStorage.getItem('currentUserId');
 
-                // Verificar si hay un ID de usuario en localStorage y si el usuario está autenticado
                 if (currentUserId) {
 
-                    // Verificar si el ID del usuario coincide con el ID del tutor de la tutoría
-                    // Usar tutorId directamente de la tutoría o del objeto tutor si está disponible
                     const tutorIdToCheck = tutorId || (tutor?.id);
 
                     if (tutorIdToCheck && currentUserId === tutorIdToCheck) {
@@ -66,17 +66,27 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
             }
         };
 
-        // Ejecutar la verificación inmediatamente
         checkOwnership();
+        const intervalId = setInterval(checkOwnership, 30000);
 
-        // Opcional: Configurar un intervalo para verificar periódicamente si el usuario cambió
-        // Esto puede ser útil si el componente permanece montado por mucho tiempo
-        const intervalId = setInterval(checkOwnership, 30000); // Verificar cada 30 segundos
-
-        // Limpiar el intervalo al desmontar el componente
         return () => clearInterval(intervalId);
     }, [tutorId, tutor]);
 
+    useEffect(() => {
+        const loadCurrentUser = async () => {
+            try {
+                const currentUserId = localStorage.getItem('currentUserId');
+                if (currentUserId) {
+                    const userData = await UserService.getUserById(currentUserId);
+                    setCurrentUser(userData);
+                }
+            } catch (error) {
+                console.error('Error al cargar usuario actual:', error);
+            }
+        };
+
+        loadCurrentUser();
+    }, []);
 
     const handleDeleteTutoring = async () => {
         try {
@@ -89,7 +99,6 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
                 life: 3000
             });
 
-            // Redirigir a la página de dashboard después de eliminar
             setTimeout(() => {
                 navigate('/dashboard');
             }, 2000);
@@ -117,7 +126,17 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
         });
     };
 
-    // Calculate average rating from reviews
+    const handleReviewCreated = () => {
+        window.location.reload();
+    };
+
+    const canLeaveReview = () => {
+        if (!currentUser || isOwner) return false;
+        
+        const hasReviewed = reviews.some(review => review.studentId === currentUser.id);
+        return !hasReviewed;
+    };
+
     useEffect(() => {
         if (reviews && reviews.length > 0) {
             const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
@@ -125,23 +144,17 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
         }
     }, [reviews]);
 
-    // Imagen por defecto para la tutoría
     const defaultImageUrl = 'https://i0.wp.com/port2flavors.com/wp-content/uploads/2022/07/placeholder-614.png';
 
-    // Define time slots based on the format in the database
     const timeSlots = [];
-    // Generar slots de 8 a 22h
     for (let hour = 8; hour < 22; hour++) {
         timeSlots.push(`${hour}-${hour + 1}`);
     }
 
-    // Días de la semana en español para mejor legibilidad
     const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-    // Agrupar disponibilidades por día para la visualización
     const groupedAvailabilities: { [day: string]: string[] } = {};
 
-    // Inicializar todos los días para evitar problemas con días sin horarios
     daysOfWeek.forEach(day => {
         groupedAvailabilities[day] = [];
     });
@@ -163,26 +176,22 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
                     dayIndex = parseInt(timeSlot.dayOfWeek, 10);
                 }
 
-                // Verificar índice válido
                 if (isNaN(dayIndex) || dayIndex < 0 || dayIndex > 6) {
                     console.warn('Índice de día inválido:', dayIndex, timeSlot);
-                    return; // Saltar este horario
+                    return;
                 }
 
                 const day = daysOfWeek[dayIndex];
 
-                // Extraer horas de inicio y fin con soporte para ambos formatos
                 let startTime = timeSlot.start_time || timeSlot.startTime || '';
                 let endTime = timeSlot.end_time || timeSlot.endTime || '';
 
                 if (!startTime || !endTime) {
                     console.warn('Horario sin tiempo de inicio o fin:', timeSlot);
-                    return; // Saltar este horario
+                    return;
                 }
 
-                // Limpiar el formato de los tiempos (remover segundos)
                 if (startTime.includes(':')) {
-                    // Divide por ":" y toma solo horas y minutos
                     const [startHours, startMinutes] = startTime.split(':');
                     startTime = `${startHours}:${startMinutes}`;
                 }
@@ -192,15 +201,12 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
                     endTime = `${endHours}:${endMinutes}`;
                 }
 
-                // Extraer solo las horas para el formato de los slots de tiempo
                 const startHour = parseInt(startTime.split(':')[0], 10);
                 const endHour = parseInt(endTime.split(':')[0], 10);
 
-                // Si hay minutos en el tiempo final, redondear hacia arriba
                 const endMinutes = endTime.split(':')[1] ? parseInt(endTime.split(':')[1], 10) : 0;
                 const adjustedEndHour = endMinutes > 0 ? endHour + 1 : endHour;
 
-                // Crear slots para cada hora del rango
                 for (let hour = startHour; hour < adjustedEndHour; hour++) {
                     const timeSlotStr = `${hour}-${hour + 1}`;
                     if (!groupedAvailabilities[day].includes(timeSlotStr)) {
@@ -215,7 +221,6 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
         console.warn('No hay horarios disponibles o el formato no es válido:', availableTimes);
     }
 
-    // Obtener el nombre completo del tutor
     const getTutorName = () => {
         if (tutor) {
             return `${tutor.firstName} ${tutor.lastName}`;
@@ -224,7 +229,6 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
         }
     }
 
-    // Convertir el array de "whatTheyWillLearn" a formato adecuado
     const learningPoints = Array.isArray(whatTheyWillLearn)
         ? whatTheyWillLearn
         : typeof whatTheyWillLearn === 'object' && whatTheyWillLearn !== null
@@ -263,7 +267,14 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
                     currentUser={tutor as User}
                     tutoring={tutoring}
                 />
-            )}
+            )}            <CreateReviewModal
+                visible={reviewModalVisible}
+                onHide={() => setReviewModalVisible(false)}
+                onReviewCreated={handleReviewCreated}
+                tutoringId={tutoring.id}
+                currentUser={currentUser}
+                tutorName={tutor ? `${tutor.firstName} ${tutor.lastName}` : undefined}
+            />
             <style>{customStyles}</style>
 
             {/* Header con información básica */}
@@ -379,19 +390,32 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
                                     </table>
                                 </div>
                             </div>
-
-                            {/* Sección: Reseñas */}
                             <div className="p-6 border border-[#4a4a4a] rounded-lg bg-[#252525]">
-                                <h2 className="text-xl font-semibold mb-6">Reseñas de estudiantes</h2>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-xl font-semibold">Reseñas de estudiantes</h2>
+                                    {canLeaveReview() && (
+                                        <button
+                                            onClick={() => setReviewModalVisible(true)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-[#f05c5c] text-white rounded-lg hover:bg-[#d14949] transition-all"
+                                        >
+                                            <Star size={16} />
+                                            <span>Dejar Reseña</span>
+                                        </button>
+                                    )}                                </div>
                                 {reviews && reviews.length > 0 ? (
-                                    <ReviewList reviews={reviews} />
+                                    <ReviewList 
+                                        reviews={reviews} 
+                                        currentUserId={currentUser?.id}
+                                        onReviewUpdated={handleReviewCreated}
+                                        onReviewDeleted={handleReviewCreated}
+                                        tutorName={tutor ? `${tutor.firstName} ${tutor.lastName}` : undefined}
+                                    />
                                 ) : (
                                     <p className="text-gray-400">Aún no hay reseñas. ¡Sé el primero en dejar una reseña!</p>
                                 )}
                             </div>
                         </div>
 
-                        {/* Sidebar de imagen, precio y botón */}
                         <div className="w-full lg:w-1/4">
                             <div className="bg-[#252525] p-6 sticky top-6 rounded-lg border border-[#4a4a4a]">
                                 <img
@@ -401,7 +425,6 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
                                 />
                                 <h3 className="text-xl font-bold mb-2">{title}</h3>
                                 <p className="text-2xl font-bold text-[#f05c5c] my-3">S/. {price.toFixed(2)} </p>
-                                {/* Cambiar entre "Solicitar Tutoría" y "Editar Tutoría" según isOwner */}
                                 {isOwner ? (
                                     <button
                                         onClick={() => setEditModalVisible(true)}
@@ -418,7 +441,6 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
                                         Solicitar Tutoría
                                     </button>
                                 )}
-                                {/* Opción alternativa: Mostrar el botón de eliminar debajo del botón de solicitar */}
                                 {isOwner && (
                                     <button
                                         onClick={() => setDeleteModalVisible(true)}
@@ -450,7 +472,6 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
                 </div>
             </div>
 
-            {/* Modal para contactar al tutor */}
             <ContactTutorModal 
                 visible={contactModalVisible}
                 onHide={() => setContactModalVisible(false)}
