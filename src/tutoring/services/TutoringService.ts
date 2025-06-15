@@ -382,6 +382,35 @@ export const TutoringService = {
     }
   },
 
+  // Actualizar una reseña
+  updateReview: async (reviewId: string, reviewData: any): Promise<TutoringReview> => {
+    try {
+      const response = await axios.patch(
+        `${API_URL}/tutoring-sessions/reviews/${reviewId}`,
+        reviewData
+      );
+
+      // Convertir respuesta de snake_case a camelCase
+      const updatedReview = toCamelCase(response.data);
+
+      return new TutoringReview(updatedReview);
+    } catch (error) {
+      console.error('Error al actualizar reseña:', error);
+      throw error;
+    }
+  },
+
+  // Eliminar una reseña
+  deleteReview: async (reviewId: string): Promise<boolean> => {
+    try {
+      await axios.delete(`${API_URL}/tutoring-sessions/reviews/${reviewId}`);
+      return true;
+    } catch (error) {
+      console.error('Error al eliminar reseña:', error);
+      throw error;
+    }
+  },
+
   deleteTutoring: async (tutoringId: string): Promise<boolean> => {
     try {
 
@@ -453,10 +482,8 @@ export const TutoringService = {
 
       } catch (relatedError) {
         console.warn('Error al eliminar elementos relacionados:', relatedError);
-        // Continuamos con la eliminación de la tutoría aunque falle la eliminación de elementos relacionados
       }
 
-      // 6. Finalmente, eliminar la tutoría principal
       await axios.delete(`${API_URL}/tutoring-sessions/${tutoringId}`);
 
       return true;
