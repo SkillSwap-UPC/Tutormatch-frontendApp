@@ -310,16 +310,25 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
                             cancel={false}
                         />
                         <span className="text-white text-sm">({reviews.length} reseñas)</span>
-                    </div>
-
-                    <div className="flex items-center gap-3 mt-4 mb-4">
+                    </div>                    <div className="flex items-center gap-3 mt-4 mb-4">
                         {tutor && (
                             <>
-                                <div className="flex items-center">
-                                    <Avatar user={tutor} size="sm" className="mr-2" />
-                                    <Link to={`/profile/${tutor.id}`} className="text-red-600 hover:underline">
-                                        {getTutorName()}
-                                    </Link>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center">
+                                        <Avatar user={tutor} size="sm" className="mr-2" />
+                                        <Link to={`/profile/${tutor.id}`} className="text-red-600 hover:underline">
+                                            {getTutorName()}
+                                        </Link>
+                                    </div>
+                                    {/* Solo mostrar botón "Ver Tutorías" si es tutor */}
+                                    {tutor.role === 'tutor' && (
+                                        <Link 
+                                            to={`/tutor/${tutor.id}/tutorings`}
+                                            className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-all"
+                                        >
+                                            Ver Tutorías
+                                        </Link>
+                                    )}
                                 </div>
                             </>
                         )}

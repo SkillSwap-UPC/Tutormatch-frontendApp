@@ -90,14 +90,22 @@ const DashboardPage: React.FC = () => {
                         {user.role === 'tutor' ? 'Tutor' : 'Estudiante'} • {user.semesterNumber}° Semestre
                       </p>
                       <p className="text-light-gray">{user.academicYear || 'No especificado'}</p>
-                    </div>
-                    <div className="mt-4 md:mt-0">
+                    </div>                    <div className="mt-4 md:mt-0 flex flex-col gap-2">
                       <button
                         className="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-md"
                         onClick={() => navigate('/profile')}
                       >
                         Ver perfil
                       </button>
+                      {/* Solo mostrar botón "Ver Tutorías" si el usuario es tutor */}
+                      {user.role === 'tutor' && (
+                        <button
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+                          onClick={() => navigate(`/tutor/${user.id}/tutorings`)}
+                        >
+                          Ver Tutorías
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

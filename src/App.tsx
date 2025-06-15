@@ -8,6 +8,7 @@ import 'primereact/resources/themes/lara-dark-pink/theme.css'
 import DashboardPage from './dashboard/pages/DashboardPage';
 import 'primeicons/primeicons.css';
 import TutoringDetailsPage from './tutoring/pages/TutoringDetailsPage';
+import TutorTutoringsPage from './tutoring/pages/TutorTutoringsPage';
 import TutoringsBySemester from './dashboard/pages/TutoringsBySemester';
 import NotFoundPage from './public/pages/not-found/NotFoundPage';
 import ProfilePage from './public/pages/profile/ProfilePage';
@@ -28,6 +29,7 @@ const App = () => {
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/semester/:semesterId" element={<TutoringsBySemester />} />
           <Route path="/tutoring/:tutoringId" element={<TutoringDetailsPage />} />
+          <Route path="/tutor/:tutorId/tutorings" element={<TutorTutoringsPage />} />
           <Route path="/register/success" element={<RegisterSuccessPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/:userId" element={<ProfilePage />} />
