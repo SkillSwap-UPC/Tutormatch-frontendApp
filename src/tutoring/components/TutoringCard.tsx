@@ -5,6 +5,7 @@ import { User } from '../../user/types/User';
 import { Rating } from 'primereact/rating';
 import { UserService } from '../../user/services/UserService';
 import { TutoringService } from '../services/TutoringService';
+import { Calendar } from 'lucide-react';
 
 interface TutoringCardProps {
   tutoring: TutoringSession;
@@ -69,22 +70,31 @@ const TutoringCard: React.FC<TutoringCardProps> = ({ tutoring }) => {
       />
       <h2 className="text-xl font-bold text-white">{tutoring.title}</h2>
       
-      {/* Información del tutor */}
       <div className="flex items-center mt-2 mb-2">
         <span className="text-primary text-sm">
          {loading ? 'Cargando...' : tutor ? `${tutor.firstName} ${tutor.lastName}` : 'Tutor desconocido'}
         </span>
       </div>
 
-      {/* Rating */}
       <div className="flex items-center mt-1 mb-2">
       <style>{customStyles}</style>
-        <span className="text-white font-semibold text-sm mr-2">{rating > 0 ? rating : '0.0'}</span>
+        <span className="text-primary font-semibold text-sm mr-2">{rating > 0 ? rating : '0.0'}</span>
         <Rating value={Math.round(rating)} disabled cancel={false} className="custom-rating" />
         <span className="text-gray-400 text-xs ml-2">({reviewCount} reseñas)</span>
       </div>
-      <p className="text-gray-400 line-clamp-2">{tutoring.description}</p>
-      <p className="text-white font-bold mt-2">S/. {tutoring.price.toFixed(2)}</p>
+      <p className="text-[#9CA3AF] line-clamp-2">{tutoring.description}</p>
+      <p className="text-[#D1D5DB] font-bold mt-2">S/. {tutoring.price.toFixed(2)}</p>
+      <div className="flex items-center text-[#64B5F6] mt-2">
+        <Calendar className="w-4 h-4 mr-2" />
+        <span>{tutoring.createdAt ? new Date(tutoring.createdAt).toLocaleString('es-PE', { 
+          year: 'numeric', 
+          month: '2-digit', 
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }) : 'Fecha no disponible'}</span>
+      </div>
     </Link>
   );
 };
