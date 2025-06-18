@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TutoringSession, TutoringReview } from '../types/Tutoring';
-import { Check, Users, Monitor, Edit, Star } from 'lucide-react';
+import { Check, Users, Monitor, Edit, Star, Expand } from 'lucide-react';
 import { Rating } from 'primereact/rating';
+import { Dialog } from 'primereact/dialog';
 import ReviewList from './Review/ReviewList';
 import CreateReviewModal from './Review/CreateReviewModal';
 import { User } from '../../user/types/User';
@@ -32,8 +33,7 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
     tutor,
     course
 }) => {
-    const { title, description, price, whatTheyWillLearn, imageUrl, availableTimes, tutorId } = tutoring;
-    const [averageRating, setAverageRating] = useState<number>(0);
+    const { title, description, price, whatTheyWillLearn, imageUrl, availableTimes, tutorId } = tutoring;    const [averageRating, setAverageRating] = useState<number>(0);
     const navigate = useNavigate();
     const toast = useRef<Toast>(null);
     const [isOwner, setIsOwner] = useState<boolean>(false);
@@ -41,6 +41,7 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
     const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
     const [contactModalVisible, setContactModalVisible] = useState<boolean>(false);
     const [reviewModalVisible, setReviewModalVisible] = useState<boolean>(false);
+    const [scheduleModalVisible, setScheduleModalVisible] = useState<boolean>(false);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
 
     useEffect(() => {
@@ -267,7 +268,8 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
                     currentUser={tutor as User}
                     tutoring={tutoring}
                 />
-            )}            <CreateReviewModal
+            )}            
+            <CreateReviewModal
                 visible={reviewModalVisible}
                 onHide={() => setReviewModalVisible(false)}
                 onReviewCreated={handleReviewCreated}
@@ -355,11 +357,19 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
                                         </li>
                                     ))}
                                 </ul>
-                            </div>
-
+                            </div>                            
                             {/* Sección: Horarios disponibles */}
                             <div className="p-6 border border-[#4a4a4a] rounded-lg bg-[#252525]">
-                                <h2 className="text-xl font-semibold mb-6">Horarios disponibles del tutor</h2>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-xl font-semibold">Horarios disponibles del tutor</h2>
+                                    <button
+                                        onClick={() => setScheduleModalVisible(true)}
+                                        className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary-hover transition-all flex items-center gap-2"
+                                    >
+                                        <Expand size={16} />
+                                        Expandir horario
+                                    </button>
+                                </div>
 
                                 <div className="overflow-x-auto">
                                     <table className="w-full border-collapse min-w-[600px] table-fixed">
@@ -479,13 +489,106 @@ const TutoringDetails: React.FC<TutoringDetailsProps> = ({
 
                     </div>
                 </div>
-            </div>
-
-            <ContactTutorModal 
+            </div>            <ContactTutorModal 
                 visible={contactModalVisible}
                 onHide={() => setContactModalVisible(false)}
                 tutor={tutor}
             />
+
+            {/* Modal de horarios expandidos */}
+            <Dialog
+                visible={scheduleModalVisible}
+                onHide={() => setScheduleModalVisible(false)}
+                style={{ width: '95%', maxWidth: '1000px' }}
+                modal
+                header={
+                    <div className="w-full flex justify-between items-center text-white">
+                        <h2 className="text-xl font-semibold">Horarios disponibles - {tutor ? `${tutor.firstName} ${tutor.lastName}` : 'Tutor'}</h2>
+                        <button
+                            onClick={() => setScheduleModalVisible(false)}
+                            className="text-white bg-transparent hover:text-gray-400"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                }
+                footer={false}
+                className="border-none shadow-xl"
+                draggable={false}
+                resizable={false}
+                closable={false}
+                contentClassName="bg-[#1f1f1f] text-white p-6"
+            >
+                <div className="space-y-4">
+                    <div className="text-center mb-6">
+                        <p className="text-gray-300 text-sm">
+                            Los horarios marcados en verde indican disponibilidad del tutor
+                        </p>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse min-w-[800px] table-fixed">
+                            <thead>
+                                <tr>
+                                    <th className="w-20 p-3 text-center text-gray-400 font-semibold">Hora</th>
+                                    {daysOfWeek.map(day => (
+                                        <th key={day} className="text-center p-3 text-white uppercase font-bold text-sm">
+                                            {day}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {timeSlots.map(timeSlot => (
+                                    <tr key={timeSlot} className="border-b border-gray-700">
+                                        <td className="text-center p-3 text-gray-400 font-medium">
+                                            {timeSlot}h
+                                        </td>
+                                        {daysOfWeek.map(day => {
+                                            const isAvailable = groupedAvailabilities[day]?.includes(timeSlot);
+                                            return (
+                                                <td key={`${day}-${timeSlot}`} className="p-2">
+                                                    <div
+                                                        className={`h-12 flex items-center justify-center rounded-lg transition-all duration-200
+                                                        ${isAvailable
+                                                                ? 'bg-green-600 text-white font-bold shadow-lg scale-105'
+                                                                : 'border-2 border-gray-600 text-gray-500 bg-transparent'
+                                                            }`}
+                                                    >
+                                                        {isAvailable ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <Check size={18} />
+                                                                <span className="text-xs">Disponible</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs">No disponible</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div className="mt-6 text-center">
+                        <div className="flex justify-center items-center gap-6 text-sm">
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 bg-green-600 rounded flex items-center justify-center">
+                                    <Check size={12} className="text-white" />
+                                </div>
+                                <span className="text-gray-300">Disponible</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-gray-600 bg-gray-800 rounded"></div>
+                                <span className="text-gray-300">No disponible</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Dialog>
         </div>
     );
 };
