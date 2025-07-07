@@ -67,5 +67,5 @@ Las contribuciones son bienvenidas. Por favor, sigue estos pasos:
 ## Contacto y Soporte
 
 Para soporte técnico o consultas, contacta a:
-- Correo: rlopezhuaman321@gmail.com
+- Correo: rdri.dev03@gmail.com
 - Horario: Lunes a Viernes, 9:00 am - 6:00 pm
