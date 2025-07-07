@@ -2,7 +2,7 @@
 
 ## Descripción del Proyecto
 
-TutorMatch es una plataforma que conecta estudiantes con tutores académicos calificados. Diseñada exclusivamente para la comunidad universitaria UPC, permite a los estudiantes encontrar apoyo académico personalizado y a los tutores ofrecer sus servicios de enseñanza.
+TutorMatch es una plataforma que conecta estudiantes con tutores académicos calificados. Diseñada exclusivamente para la comunidad universitaria UPC, permite a los estudiantes encontrar apoyo académico personalizado y a los tutores ofrecer sus servicios de enseñanza. 
 
 ## Características Principales
 
