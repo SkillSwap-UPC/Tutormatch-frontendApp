@@ -171,7 +171,6 @@ export function useAuth() {
 
   const signUp = async (email: string, password: string, userData: any): Promise<{success: boolean, message: string}> => {
     try {
-      // Ajustamos la estructura para que coincida exactamente con el RegisterDto del backend
       const registerData = {
         email,
         password,
@@ -189,13 +188,11 @@ export function useAuth() {
         const response = await axios.post(`${API_URL}/auth/register`, registerData);
         
         if (response.data) {
-          // Si hay datos del usuario y sesión en la respuesta, actualizamos el estado
           if (response.data.user && response.data.session) {
             const token = response.data.session.access_token;
             localStorage.setItem('auth_token', token);
             setToken(token);
             
-            // Guardar el ID del usuario en localStorage
             if (response.data.user.id) {
               AuthService.setCurrentUser(response.data.user.id);
             }
@@ -208,7 +205,7 @@ export function useAuth() {
         }
   
         return {
-          success: true,  // Consideramos exitoso incluso si solo recibimos un 200 sin datos específicos
+          success: true,
           message: 'Registro enviado correctamente. Por favor verifica tu correo electrónico.'
         };
       } catch (apiError: any) {
@@ -218,9 +215,7 @@ export function useAuth() {
     } catch (error: any) {
       console.error('Error detallado:', error.response?.data);
       
-      // Manejo específico para diferentes tipos de errores
       if (error.response?.status === 400) {
-        // Si hay un mensaje específico o detalles de validación, los extraemos
         const errorMessage = error.response.data.message;
         if (Array.isArray(errorMessage)) {
           return {
@@ -258,18 +253,9 @@ export function useAuth() {
         // Si falla el endpoint de logout, continuamos con el proceso de cierre de sesión local
         console.warn('Error al comunicarse con el endpoint de logout:', logoutError);
       }
-      
-      // Limpiar la sesión de Supabase
-      await supabase.auth.signOut(); // Para mantener compatibilidad
-      
-      // Limpiar TODOS los elementos de localStorage relacionados con la autenticación
-      localStorage.clear(); // Esto borra todos los items del localStorage
-      
-      // Si prefieres borrar solo ciertos elementos, puedes usar este enfoque:
-      // const keysToRemove = ['auth_token', 'currentUserId', 'pendingRegistration', 'user_preferences'];
-      // keysToRemove.forEach(key => localStorage.removeItem(key));
-      
-      // Actualizar el estado
+
+      await supabase.auth.signOut();
+      localStorage.clear();
       setToken(null);
       setUser(null);
       setSession(null);
@@ -281,7 +267,6 @@ export function useAuth() {
     } catch (error: any) {
       console.error('Error durante el cierre de sesión:', error);
       
-      // Incluso si hay un error, intentamos limpiar el localStorage
       try {
         localStorage.clear();
         setToken(null);
@@ -292,13 +277,12 @@ export function useAuth() {
       }
       
       return {
-        success: true, // Considerar éxito incluso si el backend falló pero limpiamos localStorage
+        success: true,
         message: 'Se ha cerrado la sesión localmente'
       };
     }
   };
 
-  // Mantener estas funciones por compatibilidad o implementar endpoints equivalentes
   const verifyEmail = async (email: string): Promise<{success: boolean, message: string, isVerified: boolean}> => {
     try {
       const { error } = await supabase

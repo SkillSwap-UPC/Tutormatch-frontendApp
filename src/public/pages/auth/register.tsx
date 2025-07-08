@@ -353,7 +353,7 @@ export default function RegisterPage() {
                   value={formData.phone}
                   onChange={(e) => {
                     const value = e.target.value;
-                    if (/^9\d{0,8}$/.test(value) || value === '') {
+                    if (/^9\d{0,8}$/.test(value)) {
                     handleChange(e);
                     }
                   }}
