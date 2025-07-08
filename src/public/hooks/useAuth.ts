@@ -128,35 +128,45 @@ export function useAuth() {
         email,
         password
       });
-  
+
       if (response.data && response.data.session) {
         // Guardar el token JWT
         const token = response.data.session.access_token;
         localStorage.setItem('auth_token', token);
         setToken(token);
-        
+
         // Guardar el ID del usuario en localStorage
+        let userId = null;
         if (response.data.user && response.data.user.id) {
-          AuthService.setCurrentUser(response.data.user.id);
+          userId = response.data.user.id;
+          AuthService.setCurrentUser(userId);
         }
-        
+
         // Actualizar la sesión de Supabase para mantener compatibilidad
         await supabase.auth.setSession({
           access_token: token,
           refresh_token: response.data.session.refresh_token
         });
-  
-        // Obtener el perfil del usuario
-        if (response.data.user && response.data.user.id) {
-          fetchUserProfile(response.data.user.id);
+
+        // Obtener el perfil del usuario desde la tabla profiles para obtener el rol correcto
+        if (userId) {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', userId)
+            .single();
+          if (!error && profile && profile.role) {
+            AuthService.setCurrentUserRole(profile.role);
+          }
+          fetchUserProfile(userId);
         }
-  
+
         return {
           success: true,
           message: 'Inicio de sesión exitoso'
         };
       }
-  
+
       return {
         success: false,
         message: 'Error al iniciar sesión. Respuesta inválida del servidor.'
@@ -181,29 +191,42 @@ export function useAuth() {
         semesterNumber: Number(userData.semesterNumber),
         role: userData.role
       };
-  
+
       console.log('Enviando datos de registro (ajustados):', JSON.stringify(registerData));
-      
+
       try {
         const response = await axios.post(`${API_URL}/auth/register`, registerData);
-        
+
         if (response.data) {
+          let userId = null;
           if (response.data.user && response.data.session) {
             const token = response.data.session.access_token;
             localStorage.setItem('auth_token', token);
             setToken(token);
-            
+
             if (response.data.user.id) {
-              AuthService.setCurrentUser(response.data.user.id);
+              userId = response.data.user.id;
+              AuthService.setCurrentUser(userId);
             }
           }
-          
+          // Guardar el rol del usuario desde la tabla profiles
+          if (userId) {
+            // Esperar a que el perfil esté creado (puede requerir un pequeño delay o reintento en producción)
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', userId)
+              .single();
+            if (!error && profile && profile.role) {
+              AuthService.setCurrentUserRole(profile.role);
+            }
+          }
           return {
             success: true,
             message: 'Registro exitoso. Por favor verifica tu correo electrónico.'
           };
         }
-  
+
         return {
           success: true,
           message: 'Registro enviado correctamente. Por favor verifica tu correo electrónico.'
@@ -214,7 +237,7 @@ export function useAuth() {
       }
     } catch (error: any) {
       console.error('Error detallado:', error.response?.data);
-      
+
       if (error.response?.status === 400) {
         const errorMessage = error.response.data.message;
         if (Array.isArray(errorMessage)) {
@@ -228,7 +251,7 @@ export function useAuth() {
           message: errorMessage || 'Datos de registro inválidos'
         };
       }
-      
+
       return {
         success: false,
         message: error.response?.data?.message || 'Error inesperado al registrar usuario'

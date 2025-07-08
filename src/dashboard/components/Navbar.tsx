@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Globe, ChevronDown, Loader, Menu, X } from 'lucide-react';
+import { Globe, ChevronDown, Loader, Menu, X } from 'lucide-react';
 import CreateTutoringModal from './CreateTutoringModal';
 import { User as UserType } from '../../user/types/User';
 import { UserService } from '../../user/services/UserService';
@@ -121,8 +121,9 @@ const Navbar = () => {
     }
   };
 
-  // Verificar si el usuario es un tutor
+  // Verificar si el usuario es un tutor o admin
   const isTutor = currentUser?.role === 'tutor';
+  const isAdmin = localStorage.getItem('currentUserRole') === 'admin';
 
   // Cerrar el dropdown cuando se hace clic fuera de él
   useEffect(() => {
@@ -221,20 +222,6 @@ const Navbar = () => {
               </Link>
             </div>
 
-            {/* Barra de búsqueda centrada - solo visible en desktop */}
-            <div className="hidden md:flex flex-1 justify-center">
-              <div className="relative w-full max-w-md">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-light-gray" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Buscar cualquier curso"
-                  className="block w-full pl-10 pr-3 py-2 rounded-md bg-dark border border-dark-border text-white placeholder-light-gray focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              </div>
-            </div>
-
             {/* Botones a la derecha - visible en desktop */}
             <div className="hidden md:flex items-center space-x-4">
               {/* Solo mostrar botón de "Añadir Tutoría" si el usuario es un tutor */}
@@ -244,6 +231,15 @@ const Navbar = () => {
                   onClick={handleOpenModal}
                 >
                   Añadir Tutoría
+                </button>
+              )}
+              {/* Solo mostrar botón de "Moderar" si el usuario es admin */}
+              {isAdmin && (
+                <button
+                  className="px-4 py-2 rounded bg-primary hover:bg-primary-hover text-white font-medium"
+                  onClick={() => navigate('/admin/dashboard')}
+                >
+                  Moderar
                 </button>
               )}
               <button className="text-white rounded-full p-1 hover:bg-dark-light">
@@ -340,19 +336,6 @@ const Navbar = () => {
             className="md:hidden bg-dark-card border-t border-dark-border z-20"
           >
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {/* Barra de búsqueda en móvil */}
-              <div className="p-2">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-light-gray" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Buscar cualquier curso"
-                    className="block w-full pl-10 pr-3 py-2 rounded-md bg-dark border border-dark-border text-white placeholder-light-gray focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-              </div>
 
               {/* Botones y opciones */}
               <div className="p-2">

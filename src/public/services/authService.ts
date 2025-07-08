@@ -10,6 +10,20 @@ export class AuthService {
     static setCurrentUser(userId: string): void {
         localStorage.setItem('currentUserId', userId);
     }
+
+    /**
+     * Guarda el rol del usuario actual en el almacenamiento local
+     */
+    static setCurrentUserRole(role: string): void {
+        localStorage.setItem('currentUserRole', role);
+    }
+
+    /**
+     * Obtiene el rol del usuario actual desde el almacenamiento local
+     */
+    static getCurrentUserRole(): string | null {
+        return localStorage.getItem('currentUserRole');
+    }
   
     /**
      * Obtiene el ID del usuario actual desde el almacenamiento local

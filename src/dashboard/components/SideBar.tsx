@@ -12,7 +12,6 @@ import {
   ChevronRight,
   HelpCircle,
   X,
-  Search,
   LogOut
 } from 'lucide-react';
 import { SemesterService } from '../services/SemesterService';
@@ -185,18 +184,6 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
             <button onClick={() => setIsOpen(false)} className="text-white">
               <X size={24} />
             </button>
-          </div>
-
-          {/* Barra de búsqueda */}
-          <div className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input 
-                type="text"
-                placeholder="Buscar cualquier curso"
-                className="w-full bg-[#1e1e1e] border border-[#3a3a3a] rounded-md py-2 pl-10 pr-3 text-white"
-              />
-            </div>
           </div>
 
           {/* Botón Añadir Tutoría */}
