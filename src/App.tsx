@@ -15,6 +15,8 @@ import ProfilePage from './public/pages/profile/ProfilePage';
 import VerifyEmailPage from './public/pages/auth/verify-email';
 import { AvatarProvider } from './user/hooks/avatarContext';
 import SupportPage from './support/pages/SupportPage';
+import MembershipPlansPage from './public/pages/membership/pages/MembershipPlansPage';
+import MembershipWaitingPage from './public/pages/membership/pages/MembershipWaitingPage';
 
 const App = () => {
   return (
@@ -34,6 +36,8 @@ const App = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/:userId" element={<ProfilePage />} />
           <Route path="/support" element={<SupportPage />} />
+          <Route path="/membership/plans" element={<MembershipPlansPage />} />
+          <Route path="/membership/waiting" element={<MembershipWaitingPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>

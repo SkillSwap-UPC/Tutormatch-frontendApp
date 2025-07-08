@@ -7,6 +7,7 @@ import { Toast } from 'primereact/toast';
 import { useRef } from 'react';
 import NavbarAuth from "../../components/NavbarAuth";
 import { useAuth } from "../../hooks/useAuth";
+import { MembershipService } from '../../pages/membership/services/MembershipService';
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -57,8 +58,18 @@ export default function LoginPage() {
             const { success, message } = await signIn(email, password);
             
             if (success) {
-                // Redireccionar al dashboard
-                window.location.href = "/dashboard";
+                // Verificar membresía
+                try {
+                  const membership = await MembershipService.getMyMembership();
+                  if (membership && membership.status === 'active') {
+                    window.location.href = "/dashboard";
+                  } else {
+                    window.location.href = "/membership/plans";
+                  }
+                } catch (err) {
+                  // Si no tiene membresía, redirigir a planes
+                  window.location.href = "/membership/plans";
+                }
             } else {
                 toast.current.show({
                     severity: 'error',
