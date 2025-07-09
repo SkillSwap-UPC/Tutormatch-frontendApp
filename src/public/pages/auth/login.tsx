@@ -56,17 +56,23 @@ export default function LoginPage() {
             const { success, message } = await signIn(email, password);
             
             if (success) {
-                // Verificar membresía
-                try {
-                  const membership = await MembershipService.getMyMembership();
-                  if (membership && membership.status === 'active') {
+                // Obtener el rol desde localStorage
+                const userRole = localStorage.getItem('currentUserRole');
+                if (userRole === 'tutor') {
+                    // Solo tutores deben tener membresía activa
+                    try {
+                        const membership = await MembershipService.getMyMembership();
+                        if (membership && membership.status === 'active') {
+                            window.location.href = "/dashboard";
+                        } else {
+                            window.location.href = "/membership/plans";
+                        }
+                    } catch (err) {
+                        window.location.href = "/membership/plans";
+                    }
+                } else {
+                    // Si no es tutor, ir directo al dashboard
                     window.location.href = "/dashboard";
-                  } else {
-                    window.location.href = "/membership/plans";
-                  }
-                } catch (err) {
-                  // Si no tiene membresía, redirigir a planes
-                  window.location.href = "/membership/plans";
                 }
             } else {
                 toast.current.show({
