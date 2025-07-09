@@ -20,8 +20,6 @@ export default function LoginPage() {
 
     // Función para validar el formato del correo UPC
     const validateEmail = (email: string): boolean => {
-        // Expresión regular para validar correos con formato U20XXXXXXX@upc.edu.pe
-        // Donde las dos primeras X son números del año (mínimo 15) y el resto pueden ser números o letras
         const upcEmailRegex = /^[Uu]20([1-9][5-9]|[2-9][0-9])[a-zA-Z0-9]{5}@upc\.edu\.pe$/;
         return upcEmailRegex.test(email);
     };
